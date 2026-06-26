@@ -12,6 +12,18 @@ Payment & Report Service là service thứ 3 trong hệ thống và chịu trác
 - Hỗ trợ thanh toán và ghi nhận payment
 - Tạo báo cáo doanh thu, công nợ, báo cáo lớp
 
+## Chức năng đã đạt được
+
+- Đăng nhập bằng JWT với role: `Admin`, `Teacher`, `Student`, `InternalService`
+- Seed dữ liệu mẫu cho `admin`, `student`, `teacher`
+- Quản lý tài khoản người dùng và đổi mật khẩu
+- Tạo / xem / cập nhật tuition fee
+- Tạo và theo dõi invoice, tính toán `PaidAmount`, `DebtAmount`, `Status`
+- Ghi nhận giao dịch thanh toán và liên kết với invoice
+- Hiển thị báo cáo lớp, tổng nợ và số hóa đơn quá hạn cho teacher
+- API internal để tạo tài khoản teacher/student từ hệ thống ngoại vi
+- Flow phân quyền controller theo role với `Authorize(Roles = "...")`
+
 Service này phải liên kết được với:
 
 - N1 - Course & Schedule Service: tạo tài khoản giáo viên, truy vấn thông tin lớp/khóa học, báo cáo lớp

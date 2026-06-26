@@ -1,0 +1,478 @@
+openapi: 3.1.0
+info:
+  title: Payment & Report Service API
+  version: 1.0.0
+  description: |
+    API for Payment & Report Service in the training center system. This service handles auth, user accounts, tuition fees, invoices, payments, and reports.
+servers:
+  - url: http://localhost:5203
+    description: Local development server
+paths:
+  /api/payment-report/auth/login:
+    post:
+      summary: User login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                username:
+                  type: string
+                password:
+                  type: string
+      responses:
+        '200':
+          description: Login response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+  /api/payment-report/auth/change-password:
+    post:
+      summary: Change password
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                oldPassword:
+                  type: string
+                newPassword:
+                  type: string
+      responses:
+        '200':
+          description: Change password result
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+                  mustChangePassword:
+                    type: boolean
+  /api/payment-report/admin/users:
+    get:
+      summary: Get all users
+      responses:
+        '200':
+          description: User list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/UserAccount'
+    post:
+      summary: Create user account manually
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateUserRequest'
+      responses:
+        '201':
+          description: Created user
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserAccount'
+  /api/payment-report/admin/users/{userId}/status:
+    patch:
+      summary: Update user status
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                status:
+                  type: string
+      responses:
+        '200':
+          description: Updated status
+  /api/payment-report/admin/users/{userId}/reset-password:
+    post:
+      summary: Reset user password
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Password reset result
+  /api/payment-report/admin/tuition-fees:
+    get:
+      summary: Get tuition fees
+      responses:
+        '200':
+          description: Tuition fees list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TuitionFee'
+    post:
+      summary: Create tuition fee
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TuitionFeeRequest'
+      responses:
+        '201':
+          description: Created tuition fee
+  /api/payment-report/admin/invoices:
+    get:
+      summary: Get invoices
+      responses:
+        '200':
+          description: Invoice list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Invoice'
+    post:
+      summary: Create invoice manually
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateInvoiceRequest'
+      responses:
+        '201':
+          description: Created invoice
+  /api/payment-report/admin/invoices/{invoiceId}/payments:
+    post:
+      summary: Record payment
+      parameters:
+        - name: invoiceId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PaymentRequest'
+      responses:
+        '201':
+          description: Payment recorded
+  /api/payment-report/internal/users/create-student-account:
+    post:
+      summary: Create student user account from external service
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateExternalUserRequest'
+      responses:
+        '201':
+          description: Created student account
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateExternalUserResponse'
+  /api/payment-report/internal/users/create-teacher-account:
+    post:
+      summary: Create teacher user account from external service
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateExternalUserRequest'
+      responses:
+        '201':
+          description: Created teacher account
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateExternalUserResponse'
+  /api/payment-report/internal/users/{userId}:
+    get:
+      summary: Get user by ID for internal use
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: User account details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserAccount'
+  /api/payment-report/internal/students/{studentId}/debt-status:
+    get:
+      summary: Get student debt status
+      parameters:
+        - name: studentId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Debt status
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  studentId:
+                    type: integer
+                  totalDebt:
+                    type: number
+                  overdueCount:
+                    type: integer
+                  hasOverdueDebt:
+                    type: boolean
+components:
+  schemas:
+    LoginResponse:
+      type: object
+      properties:
+        accessToken:
+          type: string
+        refreshToken:
+          type: string
+        user:
+          $ref: '#/components/schemas/UserProfile'
+    UserProfile:
+      type: object
+      properties:
+        userId:
+          type: integer
+        fullName:
+          type: string
+        email:
+          type: string
+        role:
+          type: string
+        relatedEntityId:
+          type: integer
+        relatedEntityType:
+          type: string
+        mustChangePassword:
+          type: boolean
+    UserAccount:
+      type: object
+      properties:
+        id:
+          type: integer
+        username:
+          type: string
+        email:
+          type: string
+        phone:
+          type: string
+        fullName:
+          type: string
+        role:
+          type: string
+        relatedEntityId:
+          type: integer
+        relatedEntityType:
+          type: string
+        status:
+          type: string
+        mustChangePassword:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    CreateUserRequest:
+      type: object
+      properties:
+        username:
+          type: string
+        email:
+          type: string
+        phone:
+          type: string
+        fullName:
+          type: string
+        role:
+          type: string
+        relatedEntityId:
+          type: integer
+        relatedEntityType:
+          type: string
+        mustChangePassword:
+          type: boolean
+      required:
+        - username
+        - email
+        - role
+        - relatedEntityType
+    TuitionFee:
+      type: object
+      properties:
+        id:
+          type: integer
+        courseId:
+          type: integer
+        classId:
+          type: integer
+          nullable: true
+        amount:
+          type: number
+        currency:
+          type: string
+        effectiveFrom:
+          type: string
+          format: date
+        isActive:
+          type: boolean
+    TuitionFeeRequest:
+      type: object
+      properties:
+        courseId:
+          type: integer
+        classId:
+          type: integer
+          nullable: true
+        amount:
+          type: number
+        currency:
+          type: string
+        effectiveFrom:
+          type: string
+          format: date
+        isActive:
+          type: boolean
+      required:
+        - courseId
+        - amount
+        - currency
+        - effectiveFrom
+    Invoice:
+      type: object
+      properties:
+        id:
+          type: integer
+        invoiceCode:
+          type: string
+        studentId:
+          type: integer
+        enrollmentId:
+          type: integer
+        courseId:
+          type: integer
+        classId:
+          type: integer
+        totalAmount:
+          type: number
+        discountAmount:
+          type: number
+        finalAmount:
+          type: number
+        paidAmount:
+          type: number
+        debtAmount:
+          type: number
+        dueDate:
+          type: string
+          format: date
+        status:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+    CreateInvoiceRequest:
+      type: object
+      properties:
+        studentId:
+          type: integer
+        enrollmentId:
+          type: integer
+        courseId:
+          type: integer
+        classId:
+          type: integer
+        totalAmount:
+          type: number
+        discountAmount:
+          type: number
+        finalAmount:
+          type: number
+        dueDate:
+          type: string
+          format: date
+      required:
+        - studentId
+        - enrollmentId
+        - courseId
+        - finalAmount
+        - dueDate
+    PaymentRequest:
+      type: object
+      properties:
+        amount:
+          type: number
+        paymentMethod:
+          type: string
+        collectedBy:
+          type: string
+        note:
+          type: string
+      required:
+        - amount
+        - paymentMethod
+    CreateExternalUserRequest:
+      type: object
+      properties:
+        fullName:
+          type: string
+        email:
+          type: string
+        phone:
+          type: string
+        relatedEntityId:
+          type: integer
+        relatedEntityType:
+          type: string
+      required:
+        - fullName
+        - email
+        - relatedEntityId
+        - relatedEntityType
+    CreateExternalUserResponse:
+      type: object
+      properties:
+        userId:
+          type: integer
+        username:
+          type: string
+        temporaryPassword:
+          type: string

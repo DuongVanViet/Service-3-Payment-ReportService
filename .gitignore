@@ -1,0 +1,20 @@
+# Runtime
+node_modules/
+
+# Build outputs
+backend/bin/
+backend/obj/
+backend_publish/
+
+# Render/CI artifacts
+frontend/dist/
+
+# Local editor files
+.vs/
+.idea/
+*.user
+*.suo
+*.tmp
+
+# Misc
+package-lock.json

@@ -1,0 +1,47 @@
+name: Backend CI
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+      - name: Restore
+        working-directory: backend
+        run: dotnet restore PaymentReport.Api.csproj
+      - name: Build
+        working-directory: backend
+        run: dotnet build PaymentReport.Api.csproj -c Release --no-restore
+      - name: Publish
+        working-directory: backend
+        run: dotnet publish PaymentReport.Api.csproj -c Release -o publish --no-build
+      - name: Upload published artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-publish
+          path: backend/publish
+
+  # Optional: build docker image and push to registry (requires secrets). Uncomment and configure if you use GHCR or another registry.
+  # docker:
+  #   runs-on: ubuntu-latest
+  #   needs: build
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #     - name: Build image
+  #       run: |
+  #         docker build -t ghcr.io/${{ github.repository_owner }}/payment-report:${{ github.sha }} -f backend/Dockerfile .
+  #     - name: Log in to GHCR
+  #       if: secrets.GHCR_TOKEN
+  #       run: echo ${{ secrets.GHCR_TOKEN }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+  #     - name: Push image
+  #       if: secrets.GHCR_TOKEN
+  #       run: docker push ghcr.io/${{ github.repository_owner }}/payment-report:${{ github.sha }}

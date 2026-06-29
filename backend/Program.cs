@@ -11,21 +11,24 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
  
-// Chỉ giữ 1 policy CORS duy nhất, liệt kê đủ các origin cần thiết
+var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>()
+    ?? new[]
+    {
+        "http://localhost:5173",
+        "http://localhost:5174",
+        "http://localhost:5175",
+        "http://localhost:5176",
+        "http://127.0.0.1:5173",
+        "http://127.0.0.1:5174",
+        "http://127.0.0.1:5175",
+        "http://127.0.0.1:5176"
+    };
+
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontend", policy =>
     {
-        policy.WithOrigins(
-                "http://localhost:5173",
-                "http://localhost:5174",
-                "http://localhost:5175",
-                "http://localhost:5176",
-                "http://127.0.0.1:5173",
-                "http://127.0.0.1:5174",
-                "http://127.0.0.1:5175",
-                "http://127.0.0.1:5176"
-              )
+        policy.WithOrigins(allowedOrigins)
               .AllowAnyHeader()
               .AllowAnyMethod()
               .AllowCredentials();
@@ -35,7 +38,9 @@ builder.Services.AddCors(options =>
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")!;
 builder.Services.AddDbContext<AppDbContext>(options => options.UseSqlServer(connectionString));
  
-var jwtSecret = builder.Configuration.GetValue<string>("JwtSecret") ?? "super-secret-payment-report-service";
+var jwtSecret = builder.Configuration.GetValue<string>("JwtSecret")
+    ?? builder.Configuration.GetValue<string>("Jwt:SecretKey")
+    ?? "super-secret-payment-report-service";
 var signingKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSecret));
  
 builder.Services.AddAuthentication(options =>
@@ -170,6 +175,8 @@ using (var scope = app.Services.CreateScope())
  
 app.UseSwagger();
 app.UseSwaggerUI();
+
+app.MapGet("/health", () => Results.Ok(new { status = "Healthy" }));
  
 // Dùng đúng tên policy đã đăng ký ở trên
 app.UseCors("AllowFrontend");

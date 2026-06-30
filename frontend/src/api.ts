@@ -1,7 +1,9 @@
 import axios, { AxiosError, AxiosInstance } from 'axios';
 
+const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://service3-paymentandreport.somee.com/api/payment-report';
+
 const api: AxiosInstance = axios.create({
-  baseURL: 'http://localhost:5000/api/payment-report',
+  baseURL: apiBaseUrl,
   headers: {
     'Content-Type': 'application/json'
   }
@@ -89,7 +91,7 @@ api.interceptors.response.use(
           accessToken: string;
           refreshToken: string;
         }>(
-          'http://localhost:5000/api/payment-report/auth/refresh-token',
+          `${apiBaseUrl}/auth/refresh-token`,
           { refreshToken }
         );
 

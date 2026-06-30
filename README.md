@@ -22,6 +22,7 @@ Payment & Report Service là service thứ 3 trong hệ thống và chịu trác
 - Ghi nhận giao dịch thanh toán và liên kết với invoice
 - Hiển thị báo cáo lớp, tổng nợ và số hóa đơn quá hạn cho teacher
 - API internal để tạo tài khoản teacher/student từ hệ thống ngoại vi
+- Tạo hóa đơn mới qua internal API và ghi vào database tự động
 - Flow phân quyền controller theo role với `Authorize(Roles = "...")`
 
 Service này phải liên kết được với:
@@ -55,8 +56,21 @@ Student & Attendance Service (N2) tạo profile học viên và gọi internal A
 Khi Student & Attendance Service (N2) duyệt đăng ký thành công, nó gọi Payment & Report Service để:
 
 - kiểm tra học phí theo `courseId` / `classId`
-- tạo `Invoice`
+- tạo `Invoice` và ghi tự động vào database
 - trả về `invoiceId` cho N2 để liên kết với `Enrollment`
+
+### 5. Triển khai trên Somee
+
+Dự án đã được cấu hình kết nối tới database Somee và backend hiện có thể chạy trên domain:
+
+- `http://service3-paymentandreport.somee.com/`
+- Swagger UI: `http://service3-paymentandreport.somee.com/swagger/index.html`
+
+Các endpoint internal đã kiểm tra và hoạt động:
+
+- `POST /api/payment-report/internal/invoices/generate-from-enrollment`
+- `POST /api/payment-report/internal/invoices/generate-bulk-from-enrollments`
+- `GET /api/payment-report/internal/invoices/by-enrollment/{enrollmentId}`
 
 ### 4. Tra cứu công nợ và báo cáo cho N1/N2
 

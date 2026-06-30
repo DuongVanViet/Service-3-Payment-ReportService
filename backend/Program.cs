@@ -6,7 +6,12 @@ using PaymentReport.Api.Services;
 using System.Text;
  
 var builder = WebApplication.CreateBuilder(args);
- 
+
+builder.Services.Configure<ForwardedHeadersOptions>(options =>
+{
+    options.ForwardedHeaders = Microsoft.AspNetCore.HttpOverrides.ForwardedHeaders.XForwardedFor | Microsoft.AspNetCore.HttpOverrides.ForwardedHeaders.XForwardedProto;
+});
+
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
@@ -70,17 +75,18 @@ builder.Services.AddScoped<InvoiceService>();
 builder.Services.AddScoped<PaymentService>();
  
 var app = builder.Build();
- 
+
+app.UseForwardedHeaders();
+
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
- 
-    // Drop and recreate database to ensure all tables exist
-    db.Database.EnsureDeleted();
+
     db.Database.EnsureCreated();
- 
-    // Seed sample data
-    db.Users.AddRange(new[]
+
+    if (!db.Users.Any())
+    {
+        db.Users.AddRange(new[]
     {
         new UserAccount
         {
@@ -170,12 +176,14 @@ using (var scope = app.Services.CreateScope())
         CreatedAt = DateTime.UtcNow
     });
  
-    db.SaveChanges();
+        db.SaveChanges();
+    }
 }
  
 app.UseSwagger();
 app.UseSwaggerUI();
 
+app.MapGet("/", () => Results.Ok(new { status = "Payment Report API", message = "Use /api/payment-report or /swagger" }));
 app.MapGet("/health", () => Results.Ok(new { status = "Healthy" }));
  
 // Dùng đúng tên policy đã đăng ký ở trên
